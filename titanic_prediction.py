@@ -1,4 +1,3 @@
-# Importando bibliotecas necessárias
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -6,8 +5,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 # Carregando os dados
-train_data = pd.read_csv('/mnt/data/train.csv')
-test_data = pd.read_csv('/mnt/data/test.csv')
+train_data = pd.read_csv('train.csv')
+test_data = pd.read_csv('test.csv')
 
 # Explorando os dados
 print(train_data.head())
@@ -15,7 +14,6 @@ print(train_data.info())
 print(train_data.describe())
 
 # Limpeza e pré-processamento dos dados de treinamento
-# Preenchendo valores nulos
 train_data['Age'].fillna(train_data['Age'].median(), inplace=True)
 train_data['Embarked'].fillna(train_data['Embarked'].mode()[0], inplace=True)
 train_data['Fare'].fillna(train_data['Fare'].median(), inplace=True)
@@ -62,6 +60,6 @@ submission_predictions = model.predict(X_submission)
 
 # Criando o arquivo de submissão
 submission = pd.DataFrame({'PassengerId': test_data['PassengerId'], 'Survived': submission_predictions})
-submission.to_csv('/mnt/data/submission.csv', index=False)
+submission.to_csv('submission.csv', index=False)
 
 print("Previsões salvas no arquivo submission.csv")
