@@ -15,13 +15,18 @@ test_data = pd.read_csv('test.csv')
 # Função para criar novas features
 def create_features(df):
     df['FamilySize'] = df['SibSp'] + df['Parch'] + 1
-    df['IsAlone'] = 1
-    df.loc[df['FamilySize'] > 1, 'IsAlone'] = 0
+    df['IsAlone'] = (df['FamilySize'] == 1).astype(int)
     df['Title'] = df['Name'].apply(lambda name: name.split(',')[1].split('.')[0].strip())
     df['Title'] = df['Title'].replace(['Lady', 'Countess','Capt', 'Col','Don', 'Dr', 'Major', 'Rev', 'Sir', 'Jonkheer', 'Dona'], 'Rare')
     df['Title'] = df['Title'].replace('Mlle', 'Miss')
     df['Title'] = df['Title'].replace('Ms', 'Miss')
     df['Title'] = df['Title'].replace('Mme', 'Mrs')
+    
+    # Additional Features
+    df['AgeClass'] = df['Age'] * df['Pclass']
+    df['FarePerPerson'] = df['Fare'] / (df['FamilySize'] + 1)
+    df['Embarked'] = df['Embarked'].fillna('S')  # Fill missing values with the most common value in 'Embarked'
+    
     return df
 
 # Criar novas features nos dados de treinamento e teste
@@ -29,7 +34,7 @@ train_data = create_features(train_data)
 test_data = create_features(test_data)
 
 # Selecionar colunas relevantes
-cols_to_use = ['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked', 'FamilySize', 'IsAlone', 'Title']
+cols_to_use = ['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked', 'FamilySize', 'IsAlone', 'Title', 'AgeClass', 'FarePerPerson']
 
 # Separar os dados em features e target
 X = train_data[cols_to_use]
@@ -37,7 +42,7 @@ y = train_data['Survived']
 
 # Definir colunas categóricas e numéricas
 categorical_cols = ['Sex', 'Embarked', 'Title']
-numerical_cols = ['Age', 'SibSp', 'Parch', 'Fare', 'FamilySize', 'IsAlone']
+numerical_cols = ['Age', 'SibSp', 'Parch', 'Fare', 'FamilySize', 'IsAlone', 'AgeClass', 'FarePerPerson']
 
 # Pré-processamento de dados
 preprocessor = ColumnTransformer(
@@ -61,9 +66,10 @@ pipeline = Pipeline(steps=[
 # Tuning de Hiperparâmetros usando RandomizedSearchCV
 param_dist = {
     'classifier__n_estimators': randint(100, 500),
-    'classifier__max_depth': [None, 10, 20, 30],
+    'classifier__max_depth': [None, 10, 20, 30, 40],
     'classifier__min_samples_split': randint(2, 10),
-    'classifier__min_samples_leaf': randint(1, 10)
+    'classifier__min_samples_leaf': randint(1, 10),
+    'classifier__bootstrap': [True, False]
 }
 
 random_search = RandomizedSearchCV(pipeline, param_distributions=param_dist, n_iter=50, cv=5, n_jobs=-1, verbose=2, random_state=42)
